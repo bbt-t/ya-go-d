@@ -17,6 +17,7 @@ import (
 )
 
 func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
+	var userObj entity.User
 	contentType := r.Header.Get("Content-Type")
 
 	if !strings.Contains(contentType, "application/json") {
@@ -33,8 +34,6 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userObj := entity.User{}
-
 	if err = json.Unmarshal(payload, &userObj); err != nil {
 		http.Error(
 			w,
@@ -45,7 +44,6 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userObj.ID, err = g.s.NewUser(r.Context(), userObj)
-
 	if errors.Is(err, storage.ErrExists) {
 		http.Error(w, "login already exists", http.StatusConflict)
 		return
@@ -56,14 +54,14 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdCookie := pkg.MakeCookie(userObj.ID, g.cfg.SecretKey)
-	expiration := time.Now().Add(365 * 24 * time.Hour)
-	cookie := http.Cookie{
-		Name:    "userCookie",
-		Value:   hex.EncodeToString(createdCookie),
-		Expires: expiration,
-		Path:    "/",
-	}
-	http.SetCookie(w, &cookie)
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:    "userCookie",
+			Value:   hex.EncodeToString(pkg.MakeCookie(userObj.ID, g.cfg.SecretKey)),
+			Expires: time.Now().Add(365 * 24 * time.Hour),
+			Path:    "/",
+		},
+	)
 	w.WriteHeader(http.StatusOK)
 }
