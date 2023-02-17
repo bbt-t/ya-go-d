@@ -28,7 +28,6 @@ func (g GophermartHandler) wdAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-
 	if len(withdrawals) == 0 {
 		http.Error(w, "no content", http.StatusNoContent)
 		return

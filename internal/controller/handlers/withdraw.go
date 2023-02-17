@@ -15,6 +15,7 @@ import (
 )
 
 func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
+	var withdrawal entity.Withdraw
 	contentType := r.Header.Get("Content-Type")
 
 	if !strings.Contains(contentType, "application/json") {
@@ -30,8 +31,6 @@ func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "wrong body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	withdrawal := entity.Withdraw{}
 
 	if err = json.Unmarshal(payload, &withdrawal); err != nil {
 		http.Error(
@@ -54,14 +53,12 @@ func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userObj := value.(entity.User)
-
 	if !luhn.Validate(withdrawal.Order) {
 		http.Error(w, "wrong order number", http.StatusUnprocessableEntity)
 		return
 	}
 
 	err = g.s.Withdraw(r.Context(), userObj, withdrawal)
-
 	if errors.Is(err, storage.ErrNoEnoughBalance) {
 		http.Error(w, "Insufficient balance", http.StatusUnprocessableEntity)
 		return
