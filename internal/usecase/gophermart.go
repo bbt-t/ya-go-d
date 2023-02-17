@@ -7,6 +7,9 @@ import (
 )
 
 type DatabaseRepository interface {
+	/*
+		Interface for using DB.
+	*/
 	NewUser(ctx context.Context, user entity.User) (int, error)
 	GetUser(ctx context.Context, search, value string) (entity.User, error)
 	Withdraw(ctx context.Context, user entity.User, wd entity.Withdraw) error

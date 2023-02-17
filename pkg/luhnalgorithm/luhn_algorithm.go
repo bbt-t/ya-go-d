@@ -3,6 +3,7 @@ package luhnalgorithm
 func Validate(number int) bool {
 	/*
 		Check number by the luhnal algorithm.
+		https://en.wikipedia.org/wiki/Luhn_algorithm
 	*/
 	return (number%10+checksum(number/10))%10 == 0
 }

@@ -12,6 +12,9 @@ import (
 )
 
 func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) {
+	/*
+		Creating and insert (db) new user.
+	*/
 	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 

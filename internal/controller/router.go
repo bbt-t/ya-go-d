@@ -10,6 +10,9 @@ type Server struct {
 }
 
 func NewHTTPServer(address string, handler http.Handler) *Server {
+	/*
+		New http-server.
+	*/
 	return &Server{
 		httpServer: &http.Server{
 			Addr:    address,

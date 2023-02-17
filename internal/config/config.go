@@ -18,6 +18,10 @@ type Config struct {
 }
 
 func NewConfig() *Config {
+	/*
+		Initialize a new config.
+		(env + flag)
+	*/
 	cfg := Config{
 		WaitingTime: 500 * time.Millisecond,
 		Workers:     2,

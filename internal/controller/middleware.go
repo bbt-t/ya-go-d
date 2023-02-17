@@ -13,6 +13,9 @@ import (
 )
 
 func RequireAuthentication(cfg *config.Config) func(next http.Handler) http.Handler {
+	/*
+		Middleware for verifies auth.
+	*/
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userCookie, err := r.Cookie("userCookie")

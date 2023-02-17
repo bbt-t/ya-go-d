@@ -61,6 +61,9 @@ func NewDBStorage(cfg *config.Config) DatabaseRepository {
 }
 
 func makeMigrate(db *sql.DB) error {
+	/*
+		Creating DB tables.
+	*/
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		log.Printf("Failed create postgres instance: %v\n", err)
@@ -78,6 +81,5 @@ func makeMigrate(db *sql.DB) error {
 		log.Fatal("Failed migrate: ", err)
 		return err
 	}
-
 	return nil
 }
