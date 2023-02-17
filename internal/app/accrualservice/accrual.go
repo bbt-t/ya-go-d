@@ -2,7 +2,6 @@ package accrualservice
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -66,13 +65,8 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 		return order, res, err
 	}
 
-	fmt.Println(r.StatusCode)
-	fmt.Println(string(body))
-
-	err = json.Unmarshal(body, &order)
-
-	if err != nil {
-		log.Println("Can't unmarshal response body:", err)
+	if err = json.Unmarshal(body, &order); err != nil {
+		log.Println(err)
 		return order, sleep, err
 	}
 

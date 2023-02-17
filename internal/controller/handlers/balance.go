@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/entity"
@@ -27,7 +27,7 @@ func (g GophermartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userObj := value.(entity.User)
-	user, err := g.s.GetUser(ctx, entity.SearchByID, fmt.Sprint(userObj.ID))
+	user, err := g.s.GetUser(ctx, entity.SearchByID, strconv.Itoa(userObj.ID))
 
 	if err != nil {
 		log.Println("Failed fetch balance:", err)

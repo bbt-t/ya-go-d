@@ -37,9 +37,12 @@ func (g GophermartHandler) login(w http.ResponseWriter, r *http.Request) {
 
 	userObj := entity.User{}
 
-	err = json.Unmarshal(payload, &userObj)
-	if err != nil {
-		http.Error(w, "wrong body: "+err.Error(), http.StatusBadRequest)
+	if err = json.Unmarshal(payload, &userObj); err != nil {
+		http.Error(
+			w,
+			fmt.Sprintf("wrong body: %v", err),
+			http.StatusBadRequest,
+		)
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -35,7 +36,11 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	userObj := entity.User{}
 
 	if err = json.Unmarshal(payload, &userObj); err != nil {
-		http.Error(w, "wrong body: "+err.Error(), http.StatusBadRequest)
+		http.Error(
+			w,
+			fmt.Sprintf("wrong body: %v", err),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
