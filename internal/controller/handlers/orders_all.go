@@ -9,7 +9,7 @@ import (
 )
 
 func (g GophermartHandler) ordersAll(w http.ResponseWriter, r *http.Request) {
-	value := r.Context().Value(entity.CtxUserKey{})
+	value := r.Context().Value("user_id")
 
 	switch value.(type) {
 	case entity.User:

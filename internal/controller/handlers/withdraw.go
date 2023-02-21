@@ -41,7 +41,7 @@ func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value := r.Context().Value(entity.CtxUserKey{})
+	value := r.Context().Value("user_id")
 
 	switch value.(type) {
 	case entity.User:

@@ -49,7 +49,7 @@ func RequireAuthentication(cfg *config.Config) func(next http.Handler) http.Hand
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), entity.CtxUserKey{}, userObj)
+			ctx := context.WithValue(r.Context(), "user_id", userObj)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

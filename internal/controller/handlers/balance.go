@@ -15,7 +15,7 @@ func (g GophermartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 
-	value := r.Context().Value(entity.CtxUserKey{})
+	value := r.Context().Value("user_id")
 
 	switch value.(type) {
 	case entity.User:
