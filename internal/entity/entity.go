@@ -33,6 +33,7 @@ type Withdraw struct {
 }
 
 type EventTime time.Time
+type CtxUserKey string
 
 func (t EventTime) MarshalJSON() ([]byte, error) {
 	newTime := time.Time(t)
