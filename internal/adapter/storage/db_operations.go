@@ -18,7 +18,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	if _, err := s.GetUser(ctx, "login", user.Login); err == nil {
+	if _, err := s.GetUser(ctx, entity.SearchByLogin, user.Login); err == nil {
 		return 0, ErrExists
 	}
 
