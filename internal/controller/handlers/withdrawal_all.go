@@ -9,18 +9,12 @@ import (
 )
 
 func (g GophermartHandler) wdAll(w http.ResponseWriter, r *http.Request) {
-	value := r.Context().Value(entity.CtxUserKey("user_id"))
-
-	switch value.(type) {
-	case entity.User:
-		break
-	default:
+	userObj, ok := r.Context().Value(entity.CtxUserKey("user_id")).(entity.User)
+	if !ok {
 		log.Println("Wrong value type in context")
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
-
-	userObj := value.(entity.User)
 
 	withdrawals, err := g.s.WithdrawAll(r.Context(), userObj)
 	if err != nil {
