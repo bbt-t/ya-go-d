@@ -21,16 +21,14 @@ type dbStorage struct {
 	StartTime time.Time
 }
 
-func NewDBStorage(cfg *config.Config) DatabaseRepository {
+func newDB(cfg *config.Config) *dbStorage {
 	db, err := sql.Open("pgx", cfg.DSN)
 	if err != nil {
 		log.Fatalln("Failed open DB on startup: ", err)
 	}
-
 	if err = makeMigrate(db); err != nil {
 		log.Fatalln("Failed migrate DB: ", err)
 	}
-
 	storage := &dbStorage{
 		Cfg:       cfg,
 		Queue:     NewQueue(),
@@ -56,7 +54,6 @@ func NewDBStorage(cfg *config.Config) DatabaseRepository {
 		}
 		time.Sleep(10 * time.Second)
 	}()
-
 	return storage
 }
 
@@ -76,7 +73,6 @@ func makeMigrate(db *sql.DB) error {
 		log.Printf("Failed create migration instance: %v\n", err)
 		return err
 	}
-
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatal("Failed migrate: ", err)
 		return err
