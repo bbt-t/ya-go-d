@@ -24,7 +24,7 @@ func (g GophermartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
 
 	user, err := g.s.GetUser(ctx, entity.SearchByID, strconv.Itoa(userObj.ID))
 	if err != nil {
-		log.Println("Failed fetch balance:", err)
+		log.Printf("Failed fetch balance: %+v\n", err)
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
@@ -36,7 +36,7 @@ func (g GophermartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(balance)
 	if err != nil {
-		log.Println("Failed marshalling balance:", err)
+		log.Printf("Failed marshalling balance: %+v\n", err)
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}

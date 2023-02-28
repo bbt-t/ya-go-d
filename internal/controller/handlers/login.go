@@ -51,7 +51,7 @@ func (g GophermartHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		log.Println("Failed get user:", err)
+		log.Printf("Failed get user: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}

@@ -41,7 +41,7 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 
 	r, err := http.Get(reqURL.String())
 	if err != nil {
-		log.Println("Can't get order updates from external API:", err)
+		log.Printf("Can't get order updates from external API: %+v\n", err)
 		return order, sleep, err
 	}
 
@@ -49,7 +49,7 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 	defer r.Body.Close()
 
 	if err != nil {
-		log.Println("Can't read response body:", err)
+		log.Printf("Can't read response body: %+v\n", err)
 		return order, sleep, err
 	}
 	if r.StatusCode == http.StatusNoContent {

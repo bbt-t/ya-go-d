@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -44,10 +43,9 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		job, err := s.GetOrderForUpdate()
 
 		if errors.Is(err, storage.ErrEmptyQueue) {
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			continue
 		}
-
 		if err != nil {
 			log.Println("Failed get order for update")
 			return
@@ -55,9 +53,9 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 
 		select {
 		case pool.jobs <- job:
-			fmt.Println("Sent job to worker:", job)
+			log.Printf("Sent job to worker: %v", job)
 		case <-ctx.Done():
-			fmt.Println("Shutdown")
+			log.Println("Shutdown")
 			return
 		}
 	}
@@ -71,10 +69,10 @@ func (w *workerPool) start() {
 
 			newOrderInfo, sleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
-				log.Println("Failed get update order info:", err)
+				log.Printf("Failed get update order info: %+v\n", err)
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
-					log.Println("Failed push order in queue:", err)
+					log.Printf("Failed push order in queue: %+v\n", err)
 				}
 				if sleep > 0 {
 					w.timer.Lock()
@@ -87,11 +85,11 @@ func (w *workerPool) start() {
 			if newOrderInfo.Status != work.Status {
 				work.Accrual, work.Status = newOrderInfo.Accrual, newOrderInfo.Status
 				if err := w.storage.UpdateOrders(context.Background(), work); err != nil {
-					log.Println("Failed update order:", err)
+					log.Printf("Failed update order: %+v\n", err)
 				}
 			} else {
 				if err := w.storage.PushBack(work); err != nil {
-					log.Println("Failed push order in queue:", err)
+					log.Printf("Failed push order in queue: %+v\n", err)
 				}
 			}
 		}
