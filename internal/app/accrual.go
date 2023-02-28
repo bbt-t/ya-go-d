@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/adapter/storage"
@@ -13,16 +12,10 @@ import (
 	"github.com/bbt-t/ya-go-d/internal/entity"
 )
 
-type timer struct {
-	Time *time.Timer
-	*sync.RWMutex
-}
-
 type workerPool struct {
 	jobs    chan entity.Order
 	accrual accrualservice.AccrualSystem
 	storage storage.DatabaseRepository
-	timer   timer
 }
 
 func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRepository, accrual accrualservice.AccrualSystem) {
@@ -30,9 +23,6 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		jobs:    make(chan entity.Order),
 		storage: s,
 		accrual: accrual,
-		timer: timer{
-			RWMutex: &sync.RWMutex{},
-		},
 	}
 
 	for i := 0; i < cfg.Workers; i++ {
@@ -67,18 +57,16 @@ func (w *workerPool) start() {
 		for {
 			work := <-w.jobs
 
-			newOrderInfo, _, err := w.accrual.GetOrderUpdates(work)
+			newOrderInfo, sleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
 				log.Printf("Failed get update order info: %+v\n", err)
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
 					log.Printf("Failed push order in queue: %+v\n", err)
 				}
-				//if sleep > 0 {
-				//	w.timer.Lock()
-				//	w.timer.Time = time.NewTimer(time.Duration(sleep) * time.Second)
-				//	w.timer.Unlock()
-				//}
+				if sleep > 0 {
+					time.Sleep(time.Duration(sleep) * time.Second)
+				}
 				continue
 			}
 
