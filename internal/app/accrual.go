@@ -57,15 +57,15 @@ func (w *workerPool) start() {
 		for {
 			work := <-w.jobs
 
-			newOrderInfo, sleep, err := w.accrual.GetOrderUpdates(work)
+			newOrderInfo, timeToSleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
 				log.Printf("Failed get update order info: %+v\n", err)
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
 					log.Printf("Failed push order in queue: %+v\n", err)
 				}
-				if sleep > 0 {
-					time.Sleep(time.Duration(sleep) * time.Second)
+				if timeToSleep > 0 {
+					time.Sleep(time.Duration(timeToSleep) * time.Second)
 				}
 				continue
 			}
