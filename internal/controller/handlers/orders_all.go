@@ -18,7 +18,7 @@ func (g GophermartHandler) ordersAll(w http.ResponseWriter, r *http.Request) {
 
 	withdrawals, err := g.s.OrdersAll(r.Context(), userObj)
 	if err != nil {
-		log.Println("Can't get orders history:", err)
+		log.Printf("Can't get orders history: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
@@ -30,7 +30,7 @@ func (g GophermartHandler) ordersAll(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(withdrawals)
 	if err != nil {
-		log.Println("Can't marshal orders history:", err)
+		log.Printf("Can't marshal orders history: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}

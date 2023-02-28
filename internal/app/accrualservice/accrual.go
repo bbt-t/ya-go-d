@@ -30,8 +30,6 @@ func NewExAccrualSystem(cfg config.Config) *ExAccrualSystem {
 }
 
 func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
-	sleep := 0
-
 	reqURL, err := url.Parse(s.BaseURL)
 	if err != nil {
 		log.Fatalln("Wrong accrual system URL:", err)
@@ -41,34 +39,30 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 
 	r, err := http.Get(reqURL.String())
 	if err != nil {
-		log.Println("Can't get order updates from external API:", err)
-		return order, sleep, err
+		log.Printf("Can't get order updates from external API: %+v\n", err)
+		return order, 0, err
 	}
 
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	if err != nil {
-		log.Println("Can't read response body:", err)
-		return order, sleep, err
+		log.Printf("Can't read response body: %+v\n", err)
+		return order, 0, err
 	}
-
 	if r.StatusCode == http.StatusNoContent {
 		return order, 0, nil
 	}
-
 	if r.StatusCode == http.StatusTooManyRequests {
-		res, err := strconv.Atoi(r.Header.Get("Retry-After"))
+		retryAfter, err := strconv.Atoi(r.Header.Get("Retry-After"))
 		if err != nil {
 			return order, 0, err
 		}
-		return order, res, err
+		return order, retryAfter, err
 	}
-
 	if err = json.Unmarshal(body, &order); err != nil {
 		log.Println(err)
-		return order, sleep, err
+		return order, 0, err
 	}
-
-	return order, sleep, nil
+	return order, 0, nil
 }

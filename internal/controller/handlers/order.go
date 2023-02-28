@@ -66,7 +66,7 @@ func (g GophermartHandler) order(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		log.Println("Can't add new order:", err)
+		log.Printf("Can't add new order: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}

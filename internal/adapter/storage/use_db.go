@@ -42,17 +42,14 @@ func newDB(cfg *config.Config) *dbStorage {
 			log.Println("Failed get orders for update")
 			return
 		}
-
 		if len(orders) == 0 {
 			log.Println("Updated all old orders")
 			return
 		}
-
 		if err = storage.Queue.Push(orders); err != nil {
 			log.Println("Failed push orders to queue")
 			return
 		}
-		time.Sleep(10 * time.Second)
 	}()
 	return storage
 }
