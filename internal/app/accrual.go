@@ -15,7 +15,7 @@ import (
 )
 
 type timer struct {
-	Time time.Time
+	Time *time.Timer
 	*sync.RWMutex
 }
 
@@ -32,7 +32,7 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		storage: s,
 		accrual: accrual,
 		timer: timer{
-			Time:    time.Now(),
+			Time:    time.NewTimer(3 * time.Second),
 			RWMutex: &sync.RWMutex{},
 		},
 	}
@@ -70,15 +70,6 @@ func (w *workerPool) start() {
 		for {
 			work := <-w.jobs
 
-			w.timer.RLock()
-			timer := w.timer.Time
-			t := time.Until(timer)
-			w.timer.RUnlock()
-
-			if t.Milliseconds() > 0 {
-				time.Sleep(t)
-			}
-
 			newOrderInfo, sleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
 				log.Println("Failed get update order info:", err)
@@ -88,7 +79,7 @@ func (w *workerPool) start() {
 				}
 				if sleep > 0 {
 					w.timer.Lock()
-					w.timer.Time = time.Now().Add(time.Duration(sleep) * time.Second)
+					w.timer.Time = time.NewTimer(time.Duration(sleep) * time.Second)
 					w.timer.Unlock()
 				}
 				continue
