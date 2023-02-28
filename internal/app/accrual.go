@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -31,7 +32,6 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		storage: s,
 		accrual: accrual,
 		timer: timer{
-			Time:    time.NewTimer(3 * time.Second),
 			RWMutex: &sync.RWMutex{},
 		},
 	}
@@ -43,10 +43,10 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 	for {
 		job, err := s.GetOrderForUpdate()
 
-		//if errors.Is(err, storage.ErrEmptyQueue) {
-		//	time.Sleep(1 * time.Second)
-		//	continue
-		//}
+		if errors.Is(err, storage.ErrEmptyQueue) {
+			time.Sleep(1 * time.Second)
+			continue
+		}
 
 		if err != nil {
 			log.Println("Failed get order for update")
