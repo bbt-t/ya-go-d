@@ -30,7 +30,7 @@ func NewExAccrualSystem(cfg config.Config) *ExAccrualSystem {
 }
 
 func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
-	sleep := 0
+	var sleep int
 
 	reqURL, err := url.Parse(s.BaseURL)
 	if err != nil {
@@ -52,23 +52,19 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 		log.Println("Can't read response body:", err)
 		return order, sleep, err
 	}
-
 	if r.StatusCode == http.StatusNoContent {
-		return order, 0, nil
+		return order, sleep, nil
 	}
-
 	if r.StatusCode == http.StatusTooManyRequests {
-		res, err := strconv.Atoi(r.Header.Get("Retry-After"))
+		retryAfter, err := strconv.Atoi(r.Header.Get("Retry-After"))
 		if err != nil {
-			return order, 0, err
+			return order, sleep, err
 		}
-		return order, res, err
+		return order, retryAfter, err
 	}
-
 	if err = json.Unmarshal(body, &order); err != nil {
 		log.Println(err)
 		return order, sleep, err
 	}
-
 	return order, sleep, nil
 }
