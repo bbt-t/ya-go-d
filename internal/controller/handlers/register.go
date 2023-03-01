@@ -49,7 +49,7 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		log.Println("Failed add user:", err)
+		log.Printf("Failed add user: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}

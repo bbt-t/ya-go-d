@@ -24,7 +24,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Login+user.Password), 0)
 	if err != nil {
-		log.Println("Failed generate hash from password:", err)
+		log.Printf("Failed generate hash from password: %+v\n", err)
 		return 0, err
 	}
 
@@ -34,7 +34,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 		user.Login,
 		hash,
 	); err != nil {
-		log.Println("Failed added new user to DB:", err)
+		log.Printf("Failed added new user to DB: %+v\n", err)
 		return 0, err
 	}
 
@@ -43,7 +43,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 		"SELECT id FROM users WHERE login = $1",
 		user.Login,
 	).Scan(&user.ID); err != nil {
-		log.Println("Failed get user ID:", err)
+		log.Printf("Failed get user ID: %+v\n", err)
 		return 0, err
 	}
 	return user.ID, nil
@@ -80,7 +80,7 @@ func (s *dbStorage) GetUser(ctx context.Context, search, value string) (entity.U
 	case nil:
 		return user, nil
 	default:
-		log.Println("Failed get user:", err)
+		log.Printf("Failed get user: %+v\n", err)
 		return user, err
 	}
 }
@@ -96,7 +96,7 @@ func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Wi
 		user.ID,
 	)
 	if err != nil {
-		log.Println("Failed withdraw:", err)
+		log.Printf("Failed withdraw: %+v\n", err)
 		return err
 	}
 
@@ -116,7 +116,7 @@ func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Wi
 		wd.Order,
 		wd.Sum,
 	); err != nil {
-		log.Println("Failed insert withdrawal into withdrawals:", err)
+		log.Printf("Failed insert withdrawal into withdrawals: %+v\n", err)
 		return err
 	}
 	return nil
@@ -135,7 +135,7 @@ func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity
 	)
 
 	if err != nil {
-		log.Println("Can't get withdrawals history from DB:", err)
+		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return withdrawals, err
 	}
 
@@ -143,14 +143,14 @@ func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity
 		withdrawal := entity.Withdraw{}
 		err := rows.Scan(&withdrawal.Order, &withdrawal.Sum, &withdrawal.Time)
 		if err != nil {
-			log.Println("Error while scanning rows:", err)
+			log.Printf("Error while scanning rows: %+v\n", err)
 			return withdrawals, err
 		}
 		withdrawals = append(withdrawals, withdrawal)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Println("Rows error:", err)
+		log.Printf("Rows error: %+v\n", err)
 		return withdrawals, err
 	}
 	return withdrawals, nil
@@ -183,13 +183,14 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 	)
 
 	if err != nil {
-		log.Println("Failed insert new order into orders:", err)
+		log.Printf("Failed insert new order into orders: %+v\n", err)
 		return err
 	}
 
 	err = s.Queue.PushBack(order)
 	if err != nil {
 		log.Println("Failed push order to queue")
+		log.Printf("Failed insert new order into orders: %+v\n", err)
 		return err
 	}
 	return nil
@@ -208,7 +209,7 @@ func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.O
 	)
 
 	if err != nil {
-		log.Println("Can't get withdrawals history from DB:", err)
+		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return orders, err
 	}
 
@@ -216,14 +217,14 @@ func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.O
 		order := entity.Order{}
 		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.EventTime)
 		if err != nil {
-			log.Println("Error while scanning rows:", err)
+			log.Printf("Error while scanning rows: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Println("Rows error:", err)
+		log.Printf("Rows error: %+v\n", err)
 		return orders, err
 	}
 	return orders, nil
@@ -248,7 +249,7 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 	)
 
 	if err != nil {
-		log.Println("can't get orders from DB for update:", err)
+		log.Printf("Can't get orders from DB for update: %+v\n", err)
 		return orders, err
 	}
 
@@ -256,7 +257,7 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 		order := entity.Order{}
 		err = rows.Scan(&order.UserID, &order.Number, &order.Status)
 		if err != nil {
-			log.Println("Rows error:", err)
+			log.Printf("Rows error: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)

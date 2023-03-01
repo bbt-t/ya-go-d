@@ -18,7 +18,7 @@ func (g GophermartHandler) wdAll(w http.ResponseWriter, r *http.Request) {
 
 	withdrawals, err := g.s.WithdrawAll(r.Context(), userObj)
 	if err != nil {
-		log.Println("Can't get withdrawal history:", err)
+		log.Printf("Can't get withdrawal history: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
@@ -29,7 +29,7 @@ func (g GophermartHandler) wdAll(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(withdrawals)
 	if err != nil {
-		log.Println("Can't marshal withdrawal history:", err)
+		log.Printf("Can't marshal withdrawal history: %+v\n", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
