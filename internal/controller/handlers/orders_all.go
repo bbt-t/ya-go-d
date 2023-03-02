@@ -8,7 +8,7 @@ import (
 	"github.com/bbt-t/ya-go-d/internal/entity"
 )
 
-func (g GophermartHandler) ordersAll(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) ordersAll(w http.ResponseWriter, r *http.Request) {
 	userObj, ok := r.Context().Value(entity.CtxUserKey("user_id")).(entity.User)
 	if !ok {
 		log.Println("Wrong value type in context")

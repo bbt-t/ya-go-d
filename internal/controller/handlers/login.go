@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (g GophermartHandler) login(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) login(w http.ResponseWriter, r *http.Request) {
 	var userObj entity.User
 	contentType := r.Header.Get("Content-Type")
 

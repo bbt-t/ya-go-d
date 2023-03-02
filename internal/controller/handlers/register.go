@@ -16,7 +16,7 @@ import (
 	"github.com/bbt-t/ya-go-d/pkg"
 )
 
-func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	var userObj entity.User
 	contentType := r.Header.Get("Content-Type")
 

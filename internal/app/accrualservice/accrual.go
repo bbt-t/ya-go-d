@@ -37,29 +37,31 @@ func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 
 	reqURL.Path = path.Join("/api/orders/", strconv.Itoa(order.Number))
 
-	r, err := http.Get(reqURL.String())
-	if err != nil {
+	r, errGet := http.Get(reqURL.String())
+	if errGet != nil {
 		log.Printf("Can't get order updates from external API: %+v\n", err)
-		return order, 0, err
+		return order, 0, errGet
 	}
 
-	body, err := io.ReadAll(r.Body)
+	body, errBody := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	if err != nil {
+	if errBody != nil {
 		log.Printf("Can't read response body: %+v\n", err)
-		return order, 0, err
+		return order, 0, errBody
 	}
-	if r.StatusCode == http.StatusNoContent {
+
+	switch r.StatusCode {
+	case http.StatusNoContent:
 		return order, 0, nil
-	}
-	if r.StatusCode == http.StatusTooManyRequests {
+	case http.StatusTooManyRequests:
 		retryAfter, err := strconv.Atoi(r.Header.Get("Retry-After"))
 		if err != nil {
 			return order, 0, err
 		}
 		return order, retryAfter, err
 	}
+
 	if err = json.Unmarshal(body, &order); err != nil {
 		log.Println(err)
 		return order, 0, err

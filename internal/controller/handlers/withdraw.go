@@ -14,7 +14,7 @@ import (
 	luhn "github.com/bbt-t/ya-go-d/pkg/luhnalgorithm"
 )
 
-func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) wd(w http.ResponseWriter, r *http.Request) {
 	var withdrawal entity.Withdraw
 	contentType := r.Header.Get("Content-Type")
 
