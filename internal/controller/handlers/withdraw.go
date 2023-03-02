@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -35,7 +34,7 @@ func (g GopherMartHandler) wd(w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(payload, &withdrawal); err != nil {
 		http.Error(
 			w,
-			fmt.Sprintf("wrong body: %v", err),
+			strings.Join([]string{"wrong payload:", err.Error()}, " "),
 			http.StatusBadRequest,
 		)
 		return

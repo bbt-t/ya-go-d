@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -37,7 +36,7 @@ func (g GopherMartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(payload, &userObj); err != nil {
 		http.Error(
 			w,
-			fmt.Sprintf("wrong body: %v", err),
+			strings.Join([]string{"wrong payload:", err.Error()}, " "),
 			http.StatusBadRequest,
 		)
 		return
