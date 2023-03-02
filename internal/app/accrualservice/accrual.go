@@ -18,19 +18,19 @@ type AccrualSystem interface {
 }
 
 func NewAccrualSystem(cfg config.Config) AccrualSystem {
-	return NewExAccrualSystem(cfg)
+	return newExAccrualSystem(cfg)
 }
 
-type ExAccrualSystem struct {
-	BaseURL string
+type exAccrualSystem struct {
+	baseURL string
 }
 
-func NewExAccrualSystem(cfg config.Config) *ExAccrualSystem {
-	return &ExAccrualSystem{BaseURL: cfg.AccrualAddress}
+func newExAccrualSystem(cfg config.Config) *exAccrualSystem {
+	return &exAccrualSystem{baseURL: cfg.AccrualAddress}
 }
 
-func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
-	reqURL, err := url.Parse(s.BaseURL)
+func (s *exAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
+	reqURL, err := url.Parse(s.baseURL)
 	if err != nil {
 		log.Fatalln("Wrong accrual system URL:", err)
 	}
