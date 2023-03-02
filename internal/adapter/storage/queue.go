@@ -12,32 +12,32 @@ type UseQueue interface {
 	GetOrder() (entity.Order, error)
 }
 
-type Queue struct {
+type queue struct {
 	Orders []entity.Order
 	*sync.RWMutex
 }
 
-func NewQueue() *Queue {
-	return &Queue{
+func newQueue() *queue {
+	return &queue{
 		RWMutex: &sync.RWMutex{},
 	}
 }
 
-func (q *Queue) Push(orders []entity.Order) error {
+func (q *queue) Push(orders []entity.Order) error {
 	q.Lock()
 	defer q.Unlock()
 	q.Orders = append(orders, q.Orders...)
 	return nil
 }
 
-func (q *Queue) PushBack(order entity.Order) error {
+func (q *queue) PushBack(order entity.Order) error {
 	q.Lock()
 	defer q.Unlock()
 	q.Orders = append(q.Orders, order)
 	return nil
 }
 
-func (q *Queue) GetOrder() (entity.Order, error) {
+func (q *queue) GetOrder() (entity.Order, error) {
 	q.RLock()
 	defer q.RUnlock()
 	if len(q.Orders) > 0 {
