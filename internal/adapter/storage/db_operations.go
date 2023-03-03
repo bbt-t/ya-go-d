@@ -43,7 +43,6 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 		"SELECT id FROM users WHERE login = $1",
 		user.Login,
 	).Scan(&user.ID); err != nil {
-		log.Printf("Failed get user ID: %+v\n", err)
 		return 0, err
 	}
 	return user.ID, nil
@@ -64,8 +63,7 @@ func (s *dbStorage) GetUser(ctx context.Context, search, value string) (entity.U
 	case entity.SearchByLogin:
 		row = s.DB.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", value)
 	default:
-		log.Fatalln("Failed search user by type")
-		return user, errors.New("received wrong search type")
+		return user, ErrSearchType
 	}
 
 	switch err := row.Scan(
@@ -80,7 +78,6 @@ func (s *dbStorage) GetUser(ctx context.Context, search, value string) (entity.U
 	case nil:
 		return user, nil
 	default:
-		log.Printf("Failed get user: %+v\n", err)
 		return user, err
 	}
 }
@@ -135,7 +132,6 @@ func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity
 	)
 
 	if err != nil {
-		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return withdrawals, err
 	}
 
@@ -143,14 +139,12 @@ func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity
 		withdrawal := entity.Withdraw{}
 		err := rows.Scan(&withdrawal.Order, &withdrawal.Sum, &withdrawal.Time)
 		if err != nil {
-			log.Printf("Error while scanning rows: %+v\n", err)
 			return withdrawals, err
 		}
 		withdrawals = append(withdrawals, withdrawal)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Printf("Rows error: %+v\n", err)
 		return withdrawals, err
 	}
 	return withdrawals, nil
@@ -189,8 +183,6 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 
 	err = s.Queue.PushBack(order)
 	if err != nil {
-		log.Println("Failed push order to queue")
-		log.Printf("Failed insert new order into orders: %+v\n", err)
 		return err
 	}
 	return nil
@@ -209,7 +201,6 @@ func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.O
 	)
 
 	if err != nil {
-		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return orders, err
 	}
 
@@ -217,14 +208,12 @@ func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.O
 		order := entity.Order{}
 		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.EventTime)
 		if err != nil {
-			log.Printf("Error while scanning rows: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Printf("Rows error: %+v\n", err)
 		return orders, err
 	}
 	return orders, nil
@@ -249,7 +238,6 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 	)
 
 	if err != nil {
-		log.Printf("Can't get orders from DB for update: %+v\n", err)
 		return orders, err
 	}
 
@@ -257,7 +245,6 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 		order := entity.Order{}
 		err = rows.Scan(&order.UserID, &order.Number, &order.Status)
 		if err != nil {
-			log.Printf("Rows error: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)

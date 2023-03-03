@@ -39,11 +39,9 @@ func newDB(cfg *config.Config) *dbStorage {
 	go func() {
 		orders, err := storage.GetOrdersForUpdate(context.TODO())
 		if err != nil {
-			log.Println("Failed get orders for update")
 			return
 		}
 		if len(orders) == 0 {
-			log.Println("Updated all old orders")
 			return
 		}
 		if err = storage.Queue.Push(orders); err != nil {

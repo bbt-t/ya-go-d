@@ -37,7 +37,6 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 			continue
 		}
 		if err != nil {
-			log.Println("Failed get order for update")
 			return
 		}
 
@@ -45,7 +44,6 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		case pool.jobs <- job:
 			log.Printf("Sent job to worker: %v", job)
 		case <-ctx.Done():
-			log.Println("Shutdown")
 			return
 		}
 	}
