@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 	"github.com/bbt-t/ya-go-d/pkg"
 )
 
-func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	var userObj entity.User
 	contentType := r.Header.Get("Content-Type")
 
@@ -37,7 +36,7 @@ func (g GophermartHandler) reg(w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(payload, &userObj); err != nil {
 		http.Error(
 			w,
-			fmt.Sprintf("wrong body: %v", err),
+			strings.Join([]string{"wrong payload:", err.Error()}, " "),
 			http.StatusBadRequest,
 		)
 		return

@@ -31,7 +31,7 @@ func newDB(cfg *config.Config) *dbStorage {
 	}
 	storage := &dbStorage{
 		Cfg:       cfg,
-		Queue:     NewQueue(),
+		Queue:     newQueue(),
 		StartTime: time.Now(),
 		DB:        db,
 	}

@@ -14,7 +14,7 @@ import (
 	luhn "github.com/bbt-t/ya-go-d/pkg/luhnalgorithm"
 )
 
-func (g GophermartHandler) order(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) order(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 
 	if !strings.Contains(contentType, "text/plain") {
