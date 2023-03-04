@@ -15,13 +15,13 @@ import (
 )
 
 type dbStorage struct {
-	Cfg       *config.Config
-	DB        *sql.DB
-	Queue     UseQueue
-	StartTime time.Time
+	cfg       *config.Config
+	db        *sql.DB
+	queue     UseQueue
+	startTime time.Time
 }
 
-func newDB(cfg *config.Config) *dbStorage {
+func newDBStorage(cfg *config.Config) *dbStorage {
 	db, err := sql.Open("pgx", cfg.DSN)
 	if err != nil {
 		log.Fatalln("Failed open DB on startup: ", err)
@@ -30,10 +30,10 @@ func newDB(cfg *config.Config) *dbStorage {
 		log.Fatalln("Failed migrate DB: ", err)
 	}
 	storage := &dbStorage{
-		Cfg:       cfg,
-		Queue:     newQueue(),
-		StartTime: time.Now(),
-		DB:        db,
+		cfg:       cfg,
+		queue:     newQueue(),
+		startTime: time.Now(),
+		db:        db,
 	}
 
 	go func() {
@@ -44,7 +44,7 @@ func newDB(cfg *config.Config) *dbStorage {
 		if len(orders) == 0 {
 			return
 		}
-		if err = storage.Queue.Push(orders); err != nil {
+		if err = storage.queue.Push(orders); err != nil {
 			log.Println("Failed push orders to queue")
 			return
 		}

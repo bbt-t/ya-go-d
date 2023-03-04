@@ -25,5 +25,5 @@ type DatabaseRepository interface {
 }
 
 func NewDBStorage(cfg *config.Config) DatabaseRepository {
-	return newDB(cfg)
+	return newDBStorage(cfg)
 }
