@@ -24,6 +24,6 @@ type DatabaseRepository interface {
 	PushBack(order entity.Order) error
 }
 
-func NewDBStorage(cfg *config.Config) DatabaseRepository {
+func NewStorage(cfg *config.Config) DatabaseRepository {
 	return newDBStorage(cfg)
 }
