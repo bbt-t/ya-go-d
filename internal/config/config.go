@@ -2,8 +2,9 @@ package config
 
 import (
 	"flag"
-	"log"
 	"time"
+
+	"github.com/bbt-t/ya-go-d/pkg"
 
 	"github.com/caarlos0/env/v7"
 )
@@ -34,7 +35,7 @@ func NewConfig() *Config {
 
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Fatalf("%+v\n", err)
+		pkg.Log.Fatal(err)
 	}
 
 	return &cfg
