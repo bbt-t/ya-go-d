@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 	luhn "github.com/bbt-t/ya-go-d/pkg/luhnalgorithm"
 )
 
-func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) wd(w http.ResponseWriter, r *http.Request) {
 	var withdrawal entity.Withdraw
 	contentType := r.Header.Get("Content-Type")
 
@@ -35,7 +34,7 @@ func (g GophermartHandler) wd(w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(payload, &withdrawal); err != nil {
 		http.Error(
 			w,
-			fmt.Sprintf("wrong body: %v", err),
+			strings.Join([]string{"wrong payload:", err.Error()}, " "),
 			http.StatusBadRequest,
 		)
 		return

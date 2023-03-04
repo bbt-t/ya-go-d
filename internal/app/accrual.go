@@ -24,11 +24,9 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		storage: s,
 		accrual: accrual,
 	}
-
 	for i := 0; i < cfg.Workers; i++ {
 		pool.start()
 	}
-
 	for {
 		job, err := s.GetOrderForUpdate()
 
@@ -37,15 +35,13 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 			continue
 		}
 		if err != nil {
-			log.Println("Failed get order for update")
 			return
 		}
 
 		select {
 		case pool.jobs <- job:
-			log.Printf("Sent job to worker: %v", job)
+			continue
 		case <-ctx.Done():
-			log.Println("Shutdown")
 			return
 		}
 	}

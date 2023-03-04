@@ -11,7 +11,7 @@ import (
 	"github.com/bbt-t/ya-go-d/internal/entity"
 )
 
-func (g GophermartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
+func (g GopherMartHandler) getBalance(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 

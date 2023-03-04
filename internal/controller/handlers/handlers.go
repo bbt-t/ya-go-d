@@ -9,19 +9,19 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type GophermartHandler struct {
-	s   *usecase.GophermartService
+type GopherMartHandler struct {
+	s   *usecase.GopherMartService
 	cfg *config.Config
 }
 
-func NewGophermartRoutes(s *usecase.GophermartService, cfg *config.Config) *GophermartHandler {
-	return &GophermartHandler{
+func NewGopherMartRoutes(s *usecase.GopherMartService, cfg *config.Config) *GopherMartHandler {
+	return &GopherMartHandler{
 		s:   s,
 		cfg: cfg,
 	}
 }
 
-func (g GophermartHandler) InitRoutes() *chi.Mux {
+func (g GopherMartHandler) InitRoutes() *chi.Mux {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/

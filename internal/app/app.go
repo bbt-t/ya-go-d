@@ -20,9 +20,9 @@ func Run(cfg *config.Config) {
 	/*
 		Creating usable objects via constructors for layers and start app.
 	*/
-	repo := storage.NewDBStorage(cfg)
-	service := usecase.NewGophermart(repo)
-	h := handlers.NewGophermartRoutes(service, cfg)
+	repo := storage.NewStorage(cfg)
+	service := usecase.NewGopherMart(repo)
+	h := handlers.NewGopherMartRoutes(service, cfg)
 	server := controller.NewHTTPServer(cfg.ServerAddress, h.InitRoutes())
 
 	ctx, cancel := context.WithCancel(context.Background())
