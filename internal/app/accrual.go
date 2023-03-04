@@ -3,13 +3,13 @@ package app
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/adapter/storage"
 	"github.com/bbt-t/ya-go-d/internal/app/accrualservice"
 	"github.com/bbt-t/ya-go-d/internal/config"
 	"github.com/bbt-t/ya-go-d/internal/entity"
-	"github.com/bbt-t/ya-go-d/pkg"
 )
 
 type workerPool struct {
@@ -24,9 +24,11 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 		storage: s,
 		accrual: accrual,
 	}
+
 	for i := 0; i < cfg.Workers; i++ {
 		pool.start()
 	}
+
 	for {
 		job, err := s.GetOrderForUpdate()
 
@@ -35,13 +37,15 @@ func newWorkerPool(ctx context.Context, cfg *config.Config, s storage.DatabaseRe
 			continue
 		}
 		if err != nil {
+			log.Println("Failed get order for update")
 			return
 		}
 
 		select {
 		case pool.jobs <- job:
-			continue
+			log.Printf("Sent job to worker: %v", job)
 		case <-ctx.Done():
+			log.Println("Shutdown")
 			return
 		}
 	}
@@ -55,10 +59,10 @@ func (w *workerPool) start() {
 
 			newOrderInfo, timeToSleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
-				pkg.Log.Info(err.Error())
+				log.Printf("Failed get update order info: %+v\n", err)
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
-					pkg.Log.Info(err.Error())
+					log.Printf("Failed push order in queue: %+v\n", err)
 				}
 				if timeToSleep > 0 {
 					time.Sleep(time.Duration(timeToSleep) * time.Second)
@@ -69,11 +73,11 @@ func (w *workerPool) start() {
 			if newOrderInfo.Status != work.Status {
 				work.Accrual, work.Status = newOrderInfo.Accrual, newOrderInfo.Status
 				if err := w.storage.UpdateOrders(context.Background(), work); err != nil {
-					pkg.Log.Info(err.Error())
+					log.Printf("Failed update order: %+v\n", err)
 				}
 			} else {
 				if err := w.storage.PushBack(work); err != nil {
-					pkg.Log.Info(err.Error())
+					log.Printf("Failed push order in queue: %+v\n", err)
 				}
 			}
 		}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/bbt-t/ya-go-d/internal/entity"
-	"github.com/bbt-t/ya-go-d/pkg"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,7 +15,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 	/*
 		Creating and insert (db) new user.
 	*/
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
 	if _, err := s.GetUser(ctx, entity.SearchByLogin, user.Login); err == nil {
@@ -24,25 +24,26 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Login+user.Password), 0)
 	if err != nil {
-		pkg.Log.Warn(err.Error())
+		log.Printf("Failed generate hash from password: %+v\n", err)
 		return 0, err
 	}
 
-	if _, err = s.db.ExecContext(
+	if _, err = s.DB.ExecContext(
 		ctx,
 		"INSERT INTO users (login, password) VALUES ($1, $2)",
 		user.Login,
 		hash,
 	); err != nil {
-		pkg.Log.Warn(err.Error())
+		log.Printf("Failed added new user to DB: %+v\n", err)
 		return 0, err
 	}
 
-	if err = s.db.QueryRowContext(
+	if err = s.DB.QueryRowContext(
 		ctx,
 		"SELECT id FROM users WHERE login = $1",
 		user.Login,
 	).Scan(&user.ID); err != nil {
+		log.Printf("Failed get user ID: %+v\n", err)
 		return 0, err
 	}
 	return user.ID, nil
@@ -54,16 +55,17 @@ func (s *dbStorage) GetUser(ctx context.Context, search, value string) (entity.U
 		user entity.User
 	)
 
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
 	switch search {
 	case entity.SearchByID:
-		row = s.db.QueryRowContext(ctx, "SELECT * FROM users WHERE id = $1", value)
+		row = s.DB.QueryRowContext(ctx, "SELECT * FROM users WHERE id = $1", value)
 	case entity.SearchByLogin:
-		row = s.db.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", value)
+		row = s.DB.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", value)
 	default:
-		return user, ErrSearchType
+		log.Fatalln("Failed search user by type")
+		return user, errors.New("received wrong search type")
 	}
 
 	switch err := row.Scan(
@@ -78,42 +80,43 @@ func (s *dbStorage) GetUser(ctx context.Context, search, value string) (entity.U
 	case nil:
 		return user, nil
 	default:
+		log.Printf("Failed get user: %+v\n", err)
 		return user, err
 	}
 }
 
 func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Withdraw) error {
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	result, err := s.db.ExecContext(
+	result, err := s.DB.ExecContext(
 		ctx,
 		"UPDATE users SET balance = balance - $1, withdrawn = withdrawn + $1 WHERE id = $2 AND balance >= $1",
 		wd.Sum,
 		user.ID,
 	)
 	if err != nil {
-		pkg.Log.Info(err.Error())
+		log.Printf("Failed withdraw: %+v\n", err)
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		pkg.Log.Info("Failed get affected rows")
+		log.Println("Failed get affected rows")
 		return err
 	}
 	if rowsAffected == 0 {
 		return ErrNoEnoughBalance
 	}
 
-	if _, err = s.db.ExecContext(
+	if _, err = s.DB.ExecContext(
 		ctx,
 		"INSERT INTO withdrawals (user_id, num, amount) VALUES ($1, $2, $3)",
 		user.ID,
 		wd.Order,
 		wd.Sum,
 	); err != nil {
-		pkg.Log.Warn(err.Error())
+		log.Printf("Failed insert withdrawal into withdrawals: %+v\n", err)
 		return err
 	}
 	return nil
@@ -122,16 +125,17 @@ func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Wi
 func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity.Withdraw, error) {
 	var withdrawals []entity.Withdraw
 
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(
+	rows, err := s.DB.QueryContext(
 		ctx,
 		"SELECT num, amount, processed FROM withdrawals WHERE user_id = $1 ORDER BY processed DESC",
 		user.ID,
 	)
 
 	if err != nil {
+		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return withdrawals, err
 	}
 
@@ -139,22 +143,24 @@ func (s *dbStorage) WithdrawAll(ctx context.Context, user entity.User) ([]entity
 		withdrawal := entity.Withdraw{}
 		err := rows.Scan(&withdrawal.Order, &withdrawal.Sum, &withdrawal.Time)
 		if err != nil {
+			log.Printf("Error while scanning rows: %+v\n", err)
 			return withdrawals, err
 		}
 		withdrawals = append(withdrawals, withdrawal)
 	}
 
 	if err := rows.Err(); err != nil {
+		log.Printf("Rows error: %+v\n", err)
 		return withdrawals, err
 	}
 	return withdrawals, nil
 }
 
 func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	row := s.db.QueryRowContext(
+	row := s.DB.QueryRowContext(
 		ctx,
 		"SELECT user_id FROM orders WHERE num = $1 LIMIT 1",
 		order.Number,
@@ -169,7 +175,7 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 		return ErrWrongUser
 	}
 
-	_, err = s.db.ExecContext(
+	_, err = s.DB.ExecContext(
 		ctx,
 		"INSERT INTO orders (user_id, num) VALUES ($1, $2)",
 		order.UserID,
@@ -177,12 +183,14 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 	)
 
 	if err != nil {
-		pkg.Log.Warn(err.Error())
+		log.Printf("Failed insert new order into orders: %+v\n", err)
 		return err
 	}
 
-	err = s.queue.PushBack(order)
+	err = s.Queue.PushBack(order)
 	if err != nil {
+		log.Println("Failed push order to queue")
+		log.Printf("Failed insert new order into orders: %+v\n", err)
 		return err
 	}
 	return nil
@@ -191,16 +199,17 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.Order, error) {
 	var orders []entity.Order
 
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(
+	rows, err := s.DB.QueryContext(
 		ctx,
 		"SELECT num, status, accrual, uploaded FROM orders WHERE user_id = $1 ORDER BY uploaded DESC ",
 		user.ID,
 	)
 
 	if err != nil {
+		log.Printf("Can't get withdrawals history from DB: %+v\n", err)
 		return orders, err
 	}
 
@@ -208,36 +217,39 @@ func (s *dbStorage) OrdersAll(ctx context.Context, user entity.User) ([]entity.O
 		order := entity.Order{}
 		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.EventTime)
 		if err != nil {
+			log.Printf("Error while scanning rows: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)
 	}
 
 	if err := rows.Err(); err != nil {
+		log.Printf("Rows error: %+v\n", err)
 		return orders, err
 	}
 	return orders, nil
 }
 
 func (s *dbStorage) GetOrderForUpdate() (entity.Order, error) {
-	return s.queue.GetOrder()
+	return s.Queue.GetOrder()
 }
 
 func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, error) {
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
 	var orders []entity.Order
 	query := `SELECT user_id, num, status FROM orders 
               WHERE (stat = 'NEW' OR status = 'PROCESSING') AND  
               uploaded < $1 ORDER BY uploaded ASC LIMIT 10`
-	rows, err := s.db.QueryContext(
+	rows, err := s.DB.QueryContext(
 		ctx,
 		query,
-		s.startTime,
+		s.StartTime,
 	)
 
 	if err != nil {
+		log.Printf("Can't get orders from DB for update: %+v\n", err)
 		return orders, err
 	}
 
@@ -245,6 +257,7 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 		order := entity.Order{}
 		err = rows.Scan(&order.UserID, &order.Number, &order.Status)
 		if err != nil {
+			log.Printf("Rows error: %+v\n", err)
 			return orders, err
 		}
 		orders = append(orders, order)
@@ -259,10 +272,10 @@ func (s *dbStorage) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, err
 }
 
 func (s *dbStorage) UpdateOrders(ctx context.Context, orders ...entity.Order) error {
-	ctx, cancel := context.WithTimeout(ctx, s.cfg.WaitingTime)
+	ctx, cancel := context.WithTimeout(ctx, s.Cfg.WaitingTime)
 	defer cancel()
 
-	tx, err := s.db.Begin()
+	tx, err := s.DB.Begin()
 	defer tx.Rollback()
 
 	if err != nil {
@@ -300,9 +313,9 @@ func (s *dbStorage) UpdateOrders(ctx context.Context, orders ...entity.Order) er
 }
 
 func (s *dbStorage) Push(orders []entity.Order) error {
-	return s.queue.Push(orders)
+	return s.Queue.Push(orders)
 }
 
 func (s *dbStorage) PushBack(order entity.Order) error {
-	return s.queue.PushBack(order)
+	return s.Queue.PushBack(order)
 }

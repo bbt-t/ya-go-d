@@ -2,8 +2,8 @@ package storage
 
 import (
 	"context"
-
 	"github.com/bbt-t/ya-go-d/internal/config"
+
 	"github.com/bbt-t/ya-go-d/internal/entity"
 )
 
@@ -24,6 +24,6 @@ type DatabaseRepository interface {
 	PushBack(order entity.Order) error
 }
 
-func NewStorage(cfg *config.Config) DatabaseRepository {
-	return newDBStorage(cfg)
+func NewDBStorage(cfg *config.Config) DatabaseRepository {
+	return newDB(cfg)
 }

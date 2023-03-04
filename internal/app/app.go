@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"errors"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,18 +14,15 @@ import (
 	"github.com/bbt-t/ya-go-d/internal/controller"
 	"github.com/bbt-t/ya-go-d/internal/controller/handlers"
 	"github.com/bbt-t/ya-go-d/internal/usecase"
-	"github.com/bbt-t/ya-go-d/pkg"
 )
 
 func Run(cfg *config.Config) {
 	/*
 		Creating usable objects via constructors for layers and start app.
 	*/
-	defer pkg.Log.Close()
-
-	repo := storage.NewStorage(cfg)
-	service := usecase.NewGopherMart(repo)
-	h := handlers.NewGopherMartRoutes(service, cfg)
+	repo := storage.NewDBStorage(cfg)
+	service := usecase.NewGophermart(repo)
+	h := handlers.NewGophermartRoutes(service, cfg)
 	server := controller.NewHTTPServer(cfg.ServerAddress, h.InitRoutes())
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -33,7 +30,7 @@ func Run(cfg *config.Config) {
 	go newWorkerPool(ctx, cfg, repo, accrualservice.NewAccrualSystem(*cfg))
 
 	go func() {
-		pkg.Log.Err(server.UP())
+		log.Println(server.UP())
 	}()
 	// Graceful shutdown:
 	gracefulStop := make(chan os.Signal, 1)
@@ -44,8 +41,8 @@ func Run(cfg *config.Config) {
 	defer cancelGrace()
 
 	if err := server.Stop(ctxGrace); err != nil {
-		pkg.Log.Err(err)
+		log.Printf("! Error shutting down server: !\n%v", err)
 	} else {
-		pkg.Log.Err(errors.New("! SERVER STOPPED !"))
+		log.Println("! SERVER STOPPED !")
 	}
 }

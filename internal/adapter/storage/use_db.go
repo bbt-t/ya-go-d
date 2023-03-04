@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/config"
-	"github.com/bbt-t/ya-go-d/pkg"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -15,37 +15,39 @@ import (
 )
 
 type dbStorage struct {
-	cfg       *config.Config
-	db        *sql.DB
-	queue     UseQueue
-	startTime time.Time
+	Cfg       *config.Config
+	DB        *sql.DB
+	Queue     UseQueue
+	StartTime time.Time
 }
 
-func newDBStorage(cfg *config.Config) *dbStorage {
+func newDB(cfg *config.Config) *dbStorage {
 	db, err := sql.Open("pgx", cfg.DSN)
 	if err != nil {
-		pkg.Log.Fatal(err)
+		log.Fatalln("Failed open DB on startup: ", err)
 	}
 	if err = makeMigrate(db); err != nil {
-		pkg.Log.Fatal(err)
+		log.Fatalln("Failed migrate DB: ", err)
 	}
 	storage := &dbStorage{
-		cfg:       cfg,
-		queue:     newQueue(),
-		startTime: time.Now(),
-		db:        db,
+		Cfg:       cfg,
+		Queue:     NewQueue(),
+		StartTime: time.Now(),
+		DB:        db,
 	}
 
 	go func() {
 		orders, err := storage.GetOrdersForUpdate(context.TODO())
 		if err != nil {
+			log.Println("Failed get orders for update")
 			return
 		}
 		if len(orders) == 0 {
+			log.Println("Updated all old orders")
 			return
 		}
-		if err = storage.queue.Push(orders); err != nil {
-			pkg.Log.Info("Failed push orders to queue")
+		if err = storage.Queue.Push(orders); err != nil {
+			log.Println("Failed push orders to queue")
 			return
 		}
 	}()
@@ -58,18 +60,18 @@ func makeMigrate(db *sql.DB) error {
 	*/
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		pkg.Log.Err(err)
+		log.Printf("Failed create postgres instance: %v\n", err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",
 		"pgx", driver)
 	if err != nil {
-		pkg.Log.Err(err)
+		log.Printf("Failed create migration instance: %v\n", err)
 		return err
 	}
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		pkg.Log.Fatal(err)
+		log.Fatal("Failed migrate: ", err)
 		return err
 	}
 	return nil
