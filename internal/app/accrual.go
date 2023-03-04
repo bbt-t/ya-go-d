@@ -55,7 +55,7 @@ func (w *workerPool) start() {
 
 			newOrderInfo, timeToSleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
-				log.Printf("Failed get update order info: %+v\n", err)
+				log.Printf("Failed get update order info: %+v", err)
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
 					log.Printf("Failed push order in queue: %+v\n", err)
