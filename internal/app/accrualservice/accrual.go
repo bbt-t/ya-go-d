@@ -3,7 +3,6 @@ package accrualservice
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/bbt-t/ya-go-d/internal/config"
 	"github.com/bbt-t/ya-go-d/internal/entity"
+	"github.com/bbt-t/ya-go-d/pkg"
 )
 
 type AccrualSystem interface {
@@ -18,50 +18,52 @@ type AccrualSystem interface {
 }
 
 func NewAccrualSystem(cfg config.Config) AccrualSystem {
-	return NewExAccrualSystem(cfg)
+	return newExAccrualSystem(cfg)
 }
 
-type ExAccrualSystem struct {
-	BaseURL string
+type exAccrualSystem struct {
+	baseURL string
 }
 
-func NewExAccrualSystem(cfg config.Config) *ExAccrualSystem {
-	return &ExAccrualSystem{BaseURL: cfg.AccrualAddress}
+func newExAccrualSystem(cfg config.Config) *exAccrualSystem {
+	return &exAccrualSystem{baseURL: cfg.AccrualAddress}
 }
 
-func (s *ExAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
-	reqURL, err := url.Parse(s.BaseURL)
+func (s *exAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
+	reqURL, err := url.Parse(s.baseURL)
 	if err != nil {
-		log.Fatalln("Wrong accrual system URL:", err)
+		pkg.Log.Fatal(err)
 	}
 
 	reqURL.Path = path.Join("/api/orders/", strconv.Itoa(order.Number))
 
-	r, err := http.Get(reqURL.String())
-	if err != nil {
-		log.Printf("Can't get order updates from external API: %+v\n", err)
-		return order, 0, err
+	r, errGet := http.Get(reqURL.String())
+	if errGet != nil {
+		pkg.Log.Info(err.Error())
+		return order, 0, errGet
 	}
 
-	body, err := io.ReadAll(r.Body)
+	body, errBody := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	if err != nil {
-		log.Printf("Can't read response body: %+v\n", err)
-		return order, 0, err
+	if errBody != nil {
+		pkg.Log.Info(err.Error())
+		return order, 0, errBody
 	}
-	if r.StatusCode == http.StatusNoContent {
+
+	switch r.StatusCode {
+	case http.StatusNoContent:
 		return order, 0, nil
-	}
-	if r.StatusCode == http.StatusTooManyRequests {
+	case http.StatusTooManyRequests:
 		retryAfter, err := strconv.Atoi(r.Header.Get("Retry-After"))
 		if err != nil {
 			return order, 0, err
 		}
 		return order, retryAfter, err
 	}
+
 	if err = json.Unmarshal(body, &order); err != nil {
-		log.Println(err)
+		pkg.Log.Warn(err.Error())
 		return order, 0, err
 	}
 	return order, 0, nil

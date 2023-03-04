@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/config"
+	"github.com/bbt-t/ya-go-d/pkg"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -15,39 +15,37 @@ import (
 )
 
 type dbStorage struct {
-	Cfg       *config.Config
-	DB        *sql.DB
-	Queue     UseQueue
-	StartTime time.Time
+	cfg       *config.Config
+	db        *sql.DB
+	queue     UseQueue
+	startTime time.Time
 }
 
-func newDB(cfg *config.Config) *dbStorage {
+func newDBStorage(cfg *config.Config) *dbStorage {
 	db, err := sql.Open("pgx", cfg.DSN)
 	if err != nil {
-		log.Fatalln("Failed open DB on startup: ", err)
+		pkg.Log.Fatal(err)
 	}
 	if err = makeMigrate(db); err != nil {
-		log.Fatalln("Failed migrate DB: ", err)
+		pkg.Log.Fatal(err)
 	}
 	storage := &dbStorage{
-		Cfg:       cfg,
-		Queue:     NewQueue(),
-		StartTime: time.Now(),
-		DB:        db,
+		cfg:       cfg,
+		queue:     newQueue(),
+		startTime: time.Now(),
+		db:        db,
 	}
 
 	go func() {
 		orders, err := storage.GetOrdersForUpdate(context.TODO())
 		if err != nil {
-			log.Println("Failed get orders for update")
 			return
 		}
 		if len(orders) == 0 {
-			log.Println("Updated all old orders")
 			return
 		}
-		if err = storage.Queue.Push(orders); err != nil {
-			log.Println("Failed push orders to queue")
+		if err = storage.queue.Push(orders); err != nil {
+			pkg.Log.Info("Failed push orders to queue")
 			return
 		}
 	}()
@@ -60,18 +58,18 @@ func makeMigrate(db *sql.DB) error {
 	*/
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		log.Printf("Failed create postgres instance: %v\n", err)
+		pkg.Log.Err(err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",
 		"pgx", driver)
 	if err != nil {
-		log.Printf("Failed create migration instance: %v\n", err)
+		pkg.Log.Err(err)
 		return err
 	}
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal("Failed migrate: ", err)
+		pkg.Log.Fatal(err)
 		return err
 	}
 	return nil

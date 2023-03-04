@@ -9,4 +9,5 @@ var (
 	ErrNumAlreadyLoaded = errors.New("already loaded order number")
 	ErrWrongUser        = errors.New("already loaded by another user")
 	ErrEmptyQueue       = errors.New("queue is empty")
+	ErrSearchType       = errors.New("received wrong search type")
 )

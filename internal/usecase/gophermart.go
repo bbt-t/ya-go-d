@@ -23,56 +23,56 @@ type DatabaseRepository interface {
 	PushBack(order entity.Order) error
 }
 
-type GophermartService struct {
+type GopherMartService struct {
 	repo DatabaseRepository
 }
 
-func NewGophermart(r DatabaseRepository) *GophermartService {
-	return &GophermartService{
+func NewGopherMart(r DatabaseRepository) *GopherMartService {
+	return &GopherMartService{
 		repo: r,
 	}
 }
 
-func (s *GophermartService) NewUser(ctx context.Context, user entity.User) (int, error) {
+func (s *GopherMartService) NewUser(ctx context.Context, user entity.User) (int, error) {
 	return s.repo.NewUser(ctx, user)
 }
 
-func (s *GophermartService) GetUser(ctx context.Context, search, value string) (entity.User, error) {
+func (s *GopherMartService) GetUser(ctx context.Context, search, value string) (entity.User, error) {
 	return s.repo.GetUser(ctx, search, value)
 }
 
-func (s *GophermartService) Withdraw(ctx context.Context, user entity.User, wd entity.Withdraw) error {
+func (s *GopherMartService) Withdraw(ctx context.Context, user entity.User, wd entity.Withdraw) error {
 	return s.repo.Withdraw(ctx, user, wd)
 }
 
-func (s *GophermartService) WithdrawAll(ctx context.Context, user entity.User) ([]entity.Withdraw, error) {
+func (s *GopherMartService) WithdrawAll(ctx context.Context, user entity.User) ([]entity.Withdraw, error) {
 	return s.repo.WithdrawAll(ctx, user)
 }
 
-func (s *GophermartService) AddOrder(ctx context.Context, order entity.Order) error {
+func (s *GopherMartService) AddOrder(ctx context.Context, order entity.Order) error {
 	return s.repo.AddOrder(ctx, order)
 }
 
-func (s *GophermartService) OrdersAll(ctx context.Context, user entity.User) ([]entity.Order, error) {
+func (s *GopherMartService) OrdersAll(ctx context.Context, user entity.User) ([]entity.Order, error) {
 	return s.repo.OrdersAll(ctx, user)
 }
 
-func (s *GophermartService) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, error) {
+func (s *GopherMartService) GetOrdersForUpdate(ctx context.Context) ([]entity.Order, error) {
 	return s.repo.GetOrdersForUpdate(ctx)
 }
 
-func (s *GophermartService) GetOrderForUpdate() (entity.Order, error) {
+func (s *GopherMartService) GetOrderForUpdate() (entity.Order, error) {
 	return s.repo.GetOrderForUpdate()
 }
 
-func (s *GophermartService) UpdateOrders(ctx context.Context, orders ...entity.Order) error {
+func (s *GopherMartService) UpdateOrders(ctx context.Context, orders ...entity.Order) error {
 	return s.repo.UpdateOrders(ctx, orders...)
 }
 
-func (s *GophermartService) Push(orders []entity.Order) error {
+func (s *GopherMartService) Push(orders []entity.Order) error {
 	return s.repo.Push(orders)
 }
 
-func (s *GophermartService) PushBack(order entity.Order) error {
+func (s *GopherMartService) PushBack(order entity.Order) error {
 	return s.repo.PushBack(order)
 }
