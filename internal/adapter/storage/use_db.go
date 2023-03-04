@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/config"
+	"github.com/bbt-t/ya-go-d/pkg"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -24,10 +24,10 @@ type dbStorage struct {
 func newDBStorage(cfg *config.Config) *dbStorage {
 	db, err := sql.Open("pgx", cfg.DSN)
 	if err != nil {
-		log.Fatalln("Failed open DB on startup: ", err)
+		pkg.Log.Fatal(err)
 	}
 	if err = makeMigrate(db); err != nil {
-		log.Fatalln("Failed migrate DB: ", err)
+		pkg.Log.Fatal(err)
 	}
 	storage := &dbStorage{
 		cfg:       cfg,
@@ -45,7 +45,7 @@ func newDBStorage(cfg *config.Config) *dbStorage {
 			return
 		}
 		if err = storage.queue.Push(orders); err != nil {
-			log.Println("Failed push orders to queue")
+			pkg.Log.Info("Failed push orders to queue")
 			return
 		}
 	}()
@@ -58,18 +58,18 @@ func makeMigrate(db *sql.DB) error {
 	*/
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		log.Printf("Failed create postgres instance: %v\n", err)
+		pkg.Log.Err(err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",
 		"pgx", driver)
 	if err != nil {
-		log.Printf("Failed create migration instance: %v\n", err)
+		pkg.Log.Err(err)
 		return err
 	}
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal("Failed migrate: ", err)
+		pkg.Log.Fatal(err)
 		return err
 	}
 	return nil

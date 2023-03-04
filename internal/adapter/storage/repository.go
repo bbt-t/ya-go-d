@@ -2,8 +2,8 @@ package storage
 
 import (
 	"context"
-	"github.com/bbt-t/ya-go-d/internal/config"
 
+	"github.com/bbt-t/ya-go-d/internal/config"
 	"github.com/bbt-t/ya-go-d/internal/entity"
 )
 

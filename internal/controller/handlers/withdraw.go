@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/bbt-t/ya-go-d/internal/adapter/storage"
 	"github.com/bbt-t/ya-go-d/internal/entity"
+	"github.com/bbt-t/ya-go-d/pkg"
 	luhn "github.com/bbt-t/ya-go-d/pkg/luhnalgorithm"
 )
 
@@ -42,7 +42,7 @@ func (g GopherMartHandler) wd(w http.ResponseWriter, r *http.Request) {
 
 	userObj, ok := r.Context().Value(entity.CtxUserKey("user_id")).(entity.User)
 	if !ok {
-		log.Println("Wrong value type in context")
+		pkg.Log.Info("Wrong value type in context")
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
@@ -58,7 +58,7 @@ func (g GopherMartHandler) wd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		log.Printf("Can't withdraw money: %+v\n", err)
+		pkg.Log.Info(err.Error())
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}

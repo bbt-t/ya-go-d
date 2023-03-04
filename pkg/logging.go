@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-//var Log = NewLog(LogFileNames{}.InitDefaultValues())
+var Log = NewLog(LogFileNames{}.InitDefaultValues())
 
 type LogInterface interface {
 	Info(msg string)

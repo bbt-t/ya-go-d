@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/bbt-t/ya-go-d/internal/entity"
+	"github.com/bbt-t/ya-go-d/pkg"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,7 +24,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Login+user.Password), 0)
 	if err != nil {
-		log.Printf("Failed generate hash from password: %+v\n", err)
+		pkg.Log.Warn(err.Error())
 		return 0, err
 	}
 
@@ -34,7 +34,7 @@ func (s *dbStorage) NewUser(ctx context.Context, user entity.User) (int, error) 
 		user.Login,
 		hash,
 	); err != nil {
-		log.Printf("Failed added new user to DB: %+v\n", err)
+		pkg.Log.Warn(err.Error())
 		return 0, err
 	}
 
@@ -93,13 +93,13 @@ func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Wi
 		user.ID,
 	)
 	if err != nil {
-		log.Printf("Failed withdraw: %+v\n", err)
+		pkg.Log.Info(err.Error())
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Println("Failed get affected rows")
+		pkg.Log.Info("Failed get affected rows")
 		return err
 	}
 	if rowsAffected == 0 {
@@ -113,7 +113,7 @@ func (s *dbStorage) Withdraw(ctx context.Context, user entity.User, wd entity.Wi
 		wd.Order,
 		wd.Sum,
 	); err != nil {
-		log.Printf("Failed insert withdrawal into withdrawals: %+v\n", err)
+		pkg.Log.Warn(err.Error())
 		return err
 	}
 	return nil
@@ -177,7 +177,7 @@ func (s *dbStorage) AddOrder(ctx context.Context, order entity.Order) error {
 	)
 
 	if err != nil {
-		log.Printf("Failed insert new order into orders: %+v\n", err)
+		pkg.Log.Warn(err.Error())
 		return err
 	}
 

@@ -3,13 +3,13 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/bbt-t/ya-go-d/internal/adapter/storage"
 	"github.com/bbt-t/ya-go-d/internal/app/accrualservice"
 	"github.com/bbt-t/ya-go-d/internal/config"
 	"github.com/bbt-t/ya-go-d/internal/entity"
+	"github.com/bbt-t/ya-go-d/pkg"
 )
 
 type workerPool struct {
@@ -55,10 +55,10 @@ func (w *workerPool) start() {
 
 			newOrderInfo, timeToSleep, err := w.accrual.GetOrderUpdates(work)
 			if err != nil {
-				log.Printf("Failed get update order info: %+v\n", err)
+				pkg.Log.Info(err.Error())
 				err := w.storage.Push([]entity.Order{work})
 				if err != nil {
-					log.Printf("Failed push order in queue: %+v\n", err)
+					pkg.Log.Info(err.Error())
 				}
 				if timeToSleep > 0 {
 					time.Sleep(time.Duration(timeToSleep) * time.Second)
@@ -69,11 +69,11 @@ func (w *workerPool) start() {
 			if newOrderInfo.Status != work.Status {
 				work.Accrual, work.Status = newOrderInfo.Accrual, newOrderInfo.Status
 				if err := w.storage.UpdateOrders(context.Background(), work); err != nil {
-					log.Printf("Failed update order: %+v\n", err)
+					pkg.Log.Info(err.Error())
 				}
 			} else {
 				if err := w.storage.PushBack(work); err != nil {
-					log.Printf("Failed push order in queue: %+v\n", err)
+					pkg.Log.Info(err.Error())
 				}
 			}
 		}
