@@ -3,6 +3,7 @@ package accrualservice
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/bbt-t/ya-go-d/internal/config"
 	"github.com/bbt-t/ya-go-d/internal/entity"
-	"github.com/bbt-t/ya-go-d/pkg"
 )
 
 type AccrualSystem interface {
@@ -32,14 +32,14 @@ func newExAccrualSystem(cfg config.Config) *exAccrualSystem {
 func (s *exAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int, error) {
 	reqURL, err := url.Parse(s.baseURL)
 	if err != nil {
-		pkg.Log.Fatal(err)
+		log.Fatalln("Wrong accrual system URL:", err)
 	}
 
 	reqURL.Path = path.Join("/api/orders/", strconv.Itoa(order.Number))
 
 	r, errGet := http.Get(reqURL.String())
 	if errGet != nil {
-		pkg.Log.Info(err.Error())
+		log.Printf("Can't get order updates from external API: %+v\n", err)
 		return order, 0, errGet
 	}
 
@@ -47,7 +47,7 @@ func (s *exAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 	defer r.Body.Close()
 
 	if errBody != nil {
-		pkg.Log.Info(err.Error())
+		log.Printf("Can't read response body: %+v\n", err)
 		return order, 0, errBody
 	}
 
@@ -63,7 +63,7 @@ func (s *exAccrualSystem) GetOrderUpdates(order entity.Order) (entity.Order, int
 	}
 
 	if err = json.Unmarshal(body, &order); err != nil {
-		pkg.Log.Warn(err.Error())
+		log.Println(err)
 		return order, 0, err
 	}
 	return order, 0, nil

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -51,7 +52,7 @@ func (g GopherMartHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if errGet != nil {
-		pkg.Log.Info(errGet.Error())
+		log.Printf("Failed get user: %+v\n", errGet)
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
