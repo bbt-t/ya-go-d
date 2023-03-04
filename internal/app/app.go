@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/bbt-t/ya-go-d/pkg"
 	"log"
 	"os"
 	"os/signal"
@@ -20,6 +21,8 @@ func Run(cfg *config.Config) {
 	/*
 		Creating usable objects via constructors for layers and start app.
 	*/
+	defer pkg.Log.Close()
+
 	repo := storage.NewStorage(cfg)
 	service := usecase.NewGopherMart(repo)
 	h := handlers.NewGopherMartRoutes(service, cfg)
@@ -30,7 +33,7 @@ func Run(cfg *config.Config) {
 	go newWorkerPool(ctx, cfg, repo, accrualservice.NewAccrualSystem(*cfg))
 
 	go func() {
-		log.Println(server.UP())
+		pkg.Log.Err(server.UP())
 	}()
 	// Graceful shutdown:
 	gracefulStop := make(chan os.Signal, 1)
