@@ -10,4 +10,4 @@
 
 ## about
 Это дипломная работа курса Яндекса по Go. 
-Подробнее о ТЗ можно посмотеть -> ***[здесь](https://github.com/bbt-t/ya-go-d/blob/master/SPECIFICATION.md)***
+Подробнее о ТЗ можно посмотреть -> ***[здесь](https://github.com/bbt-t/ya-go-d/blob/master/SPECIFICATION.md)***
